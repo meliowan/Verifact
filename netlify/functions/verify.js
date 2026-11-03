@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 
 // ==========================================
 // METS TA CLÉ API GEMINI ENTRE LES GUILLEMETS ICI :
-const MA_CLE_API = "TA_CLE_API_ICI";
+const MA_CLE_API = "AQ.Ab8RN6J09nhRhNkFZepgDKBIlU-T96WhVgES-iNMDtGwxaGofg";
 // ==========================================
 
 export async function handler(event) {
