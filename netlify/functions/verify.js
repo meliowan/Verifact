@@ -1,5 +1,10 @@
 import { GoogleGenAI } from '@google/genai';
 
+// ==========================================
+// METS TA CLÉ API GEMINI ENTRE LES GUILLEMETS ICI :
+const MA_CLE_API = "TA_CLE_API_ICI";
+// ==========================================
+
 export async function handler(event) {
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
@@ -8,7 +13,7 @@ export async function handler(event) {
     try {
         const { imageBase64, mimeType, domain } = JSON.parse(event.body);
         
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenAI({ apiKey: MA_CLE_API });
 
         const prompt = `Agis en tant qu'expert en fact-checking et analyse cette image. 
 Domaine ciblé : ${domain}.
