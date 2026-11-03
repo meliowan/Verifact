@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriFact AI - Real-Time Fact-Checker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-0 sm:p-4">
+
+    <div class="w-full sm:max-w-md bg-slate-900 sm:rounded-3xl shadow-2xl flex flex-col min-h-screen sm:min-h-[850px] border border-slate-800 overflow-hidden relative">
+        
+        <!-- Header -->
+        <header class="px-5 py-4 flex items-center justify-between border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-20">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white font-bold text-lg">✓</div>
+                <div>
+                    <h1 class="font-bold text-base tracking-tight text-white">VeriFact AI</h1>
+                    <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Live Google Grounding</p>
+                </div>
+            </div>
+            <button onclick="resetApp()" class="text-xs text-slate-300 hover:text-white bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 transition cursor-pointer">
+                Réinitialiser
+            </button>
+        </header>
+
+        <!-- Contenu -->
+        <main class="flex-1 p-5 flex flex-col space-y-5 overflow-y-auto pb-10">
+
+            <!-- Zone Upload -->
+            <div id="upload-section" class="flex flex-col space-y-4">
+                <div class="text-center space-y-1 my-2">
+                    <h2 class="text-xl font-bold text-white">Vérification en direct</h2>
+                    <p class="text-xs text-slate-400">Envoyez une capture d'écran d'actualité pour vérification web.</p>
+                </div>
+
+                <div class="flex gap-1.5 overflow-x-auto pb-1">
+                    <button onclick="setDomain('auto')" id="pill-auto" class="domain-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600 text-white shrink-0 cursor-pointer">Auto</button>
+                    <button onclick="setDomain('health')" id="pill-health" class="domain-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0 cursor-pointer">🩺 Santé</button>
+                    <button onclick="setDomain('politics')" id="pill-politics" class="domain-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0 cursor-pointer">🏛️ Politique</button>
+                    <button onclick="setDomain('tech')" id="pill-tech" class="domain-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0 cursor-pointer">💻 Tech</button>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-700 hover:border-blue-500 bg-slate-800/40 rounded-2xl p-8 flex flex-col items-center justify-center text-center relative cursor-pointer group">
+                    <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                        📁
+                    </div>
+                    <p class="text-sm font-semibold text-slate-200">Importer une capture ou photo</p>
+                    <p class="text-xs text-slate-400 mt-1">L'IA analysera le contenu via le web</p>
+                </div>
+            </div>
+
+            <!-- Loader -->
+            <div id="loader-section" class="hidden flex-col items-center justify-center py-20 space-y-4">
+                <div class="w-12 h-12 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin"></div>
+                <p id="loader-status" class="text-sm font-medium text-slate-300">Interrogation des sources de presse en cours...</p>
+            </div>
+
+            <!-- Résultats -->
+            <div id="result-section" class="hidden flex-col space-y-4">
+                <div id="verdict-banner" class="p-4 rounded-2xl border flex items-center justify-between">
+                    <div>
+                        <span id="verdict-tag" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"></span>
+                        <h2 id="verdict-title" class="text-base font-bold mt-1 text-white"></h2>
+                    </div>
+                    <div class="text-right" id="score-container">
+                        <span class="text-[10px] text-slate-400 block">Score Confiance</span>
+                        <span id="trust-score" class="text-lg font-black"></span>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 aspect-video relative">
+                    <img id="result-image" src="" alt="Média" class="w-full h-full object-cover">
+                    <div class="absolute bottom-2 left-2 bg-slate-900/80 backdrop-blur px-2 py-1 rounded text-[11px] text-slate-300" id="image-meta"></div>
+                </div>
+
+                <div class="space-y-2" id="sources-wrapper">
+                    <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">Vérification Médias</h3>
+                    <div id="sources-grid" class="space-y-2"></div>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">Analyse Détaillée</h3>
+                    <div id="findings-list" class="space-y-2"></div>
+                </div>
+
+                <button onclick="resetApp()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-sm transition cursor-pointer border border-slate-700">
+                    Vérifier une autre image
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        let currentDomain = 'auto';
+
+        function setDomain(domain) {
+            currentDomain = domain;
+            document.querySelectorAll('.domain-pill').forEach(p => {
+                p.className = "domain-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0 cursor-pointer";
+            });
+            document.getElementById('pill-' + domain).className = "domain-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-600 text-white shrink-0 cursor-pointer";
+        }
+
+        const fileInput = document.getElementById('file-input');
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const imageUrl = URL.createObjectURL(file);
+            const reader = new FileReader();
+            
+            reader.onload = async () => {
+                const base64String = reader.result.split(',')[1];
+                showLoader("Analyse de l'image & recherche web en direct...");
+
+                try {
+                    const response = await fetch('/.netlify/functions/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageBase64: base64String,
+                            mimeType: file.type || 'image/jpeg',
+                            domain: currentDomain
+                        })
+                    });
+
+                    const data = await response.json();
+                    data.image = imageUrl;
+                    hideLoader();
+                    renderResult(data);
+                } catch (err) {
+                    console.error(err);
+                    alert("Erreur de connexion avec le serveur de vérification.");
+                    resetApp();
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function showLoader(text) {
+            document.getElementById('upload-section').classList.add('hidden');
+            document.getElementById('result-section').classList.add('hidden');
+            document.getElementById('loader-section').classList.remove('hidden');
+            document.getElementById('loader-status').innerText = text;
+        }
+
+        function hideLoader() {
+            document.getElementById('loader-section').classList.add('hidden');
+        }
+
+        function renderResult(data) {
+            document.getElementById('result-section').classList.remove('hidden');
+
+            const themes = {
+                red: { banner: "bg-red-500/10 border-red-500/30 text-red-400", tag: "bg-red-500/20 text-red-300", score: "text-red-400" },
+                emerald: { banner: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400", tag: "bg-emerald-500/20 text-emerald-300", score: "text-emerald-400" },
+                amber: { banner: "bg-amber-500/10 border-amber-500/30 text-amber-400", tag: "bg-amber-500/20 text-amber-300", score: "text-amber-400" }
+            };
+
+            const t = themes[data.theme || 'amber'];
+            document.getElementById('verdict-banner').className = `p-4 rounded-2xl border flex items-center justify-between ${t.banner}`;
+            document.getElementById('verdict-tag').className = `text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${t.tag}`;
+            document.getElementById('verdict-tag').innerText = data.badge;
+            document.getElementById('verdict-title').innerText = data.title;
+
+            if (data.isNews && data.score) {
+                document.getElementById('score-container').style.display = 'block';
+                document.getElementById('trust-score').innerText = data.score;
+                document.getElementById('trust-score').className = `text-lg font-black ${t.score}`;
+            } else {
+                document.getElementById('score-container').style.display = 'none';
+            }
+
+            document.getElementById('result-image').src = data.image;
+            document.getElementById('image-meta').innerText = data.meta || "Analyse IA";
+
+            const sourcesGrid = document.getElementById('sources-grid');
+            sourcesGrid.innerHTML = '';
+            
+            if (data.sources && data.sources.length > 0) {
+                document.getElementById('sources-wrapper').style.display = 'block';
+                data.sources.forEach(s => {
+                    let badgeColor = s.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400' : s.status === 'debunked' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400';
+                    let badgeText = s.status === 'confirmed' ? 'Confirmé' : s.status === 'debunked' ? 'Debunké' : 'Partiel';
+
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-800/50 border border-slate-700/60 p-2.5 rounded-xl flex items-center justify-between text-xs";
+                    div.innerHTML = `<div><strong class="text-slate-200 block">${s.name}</strong><span class="text-slate-400">${s.note}</span></div><span class="px-2 py-0.5 rounded-full font-bold ${badgeColor}">${badgeText}</span>`;
+                    sourcesGrid.appendChild(div);
+                });
+            } else {
+                document.getElementById('sources-wrapper').style.display = 'none';
+            }
+
+            const findingsList = document.getElementById('findings-list');
+            findingsList.innerHTML = '';
+            if (data.findings) {
+                data.findings.forEach(f => {
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-800/60 border border-slate-700/60 p-3 rounded-xl text-xs space-y-1";
+                    div.innerHTML = `<h4 class="font-bold text-slate-200">${f.title}</h4><p class="text-slate-400">${f.desc}</p>`;
+                    findingsList.appendChild(div);
+                });
+            }
+        }
+
+        function resetApp() {
+            document.getElementById('result-section').classList.add('hidden');
+            document.getElementById('loader-section').classList.add('hidden');
+            document.getElementById('upload-section').classList.remove('hidden');
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
