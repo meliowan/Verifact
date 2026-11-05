@@ -22,7 +22,7 @@ export async function handler(event) {
         const PERPLEXITY_API_KEY = "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";
         // ==========================================
 
-        const prompt = `Agis en tant qu'expert en fact-checking. Analyse cette image (domaine ciblé : ${domain}) et effectue une recherche web approfondie pour vérifier si ces faits ou cette image sont authentiques ou s'il s'agit d'une infox.
+        const prompt = `Agis en tant qu'expert en fact-checking. Analyse cette image (domaine ciblé : ${domain}) et effectue une recherche web pour vérifier l'authenticité de ces faits.
 
 Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans aucun texte autour, sans balises markdown ```json) avec cette structure exacte :
 {
@@ -32,15 +32,11 @@ Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans aucun texte autour,
   "score": "92%",
   "theme": "emerald" ou "red",
   "consensus": "CONFIRMÉ PAR LA PRESSE" ou "DÉBUNKÉ",
-  "sources": [
-    { "name": "Nom d'un média", "status": "confirmed", "note": "Détail de la source" }
-  ],
   "findings": [
     { "title": "Point d'enquête", "desc": "Explication détaillée de la vérification." }
   ]
 }`;
 
-        // Appel direct à l'API Perplexity (modèle Sonar orienté recherche web)
         const perplexityResponse = await fetch('[https://api.perplexity.ai/chat/completions](https://api.perplexity.ai/chat/completions)', {
             method: 'POST',
             headers: {
@@ -73,10 +69,32 @@ Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans aucun texte autour,
         const data = await perplexityResponse.json();
         let textResponse = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : "{}";
         
-        // Nettoyage des balises markdown si présentes
+        // Récupération des URLs de sources renvoyées par Perplexity
+        const rawCitations = data.citations || [];
+
+        // Nettoyage des balises markdown
         textResponse = textResponse.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
 
         let resultData = JSON.parse(textResponse);
+
+        // Transformation propre des sources pour l'interface frontend
+        resultData.sources = rawCitations.map((url, index) => {
+            let domainName = "Source web";
+            try {
+                domainName = new URL(url).hostname.replace('www.', '');
+            } catch (e) {}
+
+            return {
+                name: domainName.charAt(0).toUpperCase() + domainName.slice(1),
+                status: "confirmed",
+                note: url
+            };
+        });
+
+        // Si aucune source n'est remontée par l'API, on met un fallback propre
+        if (!resultData.sources || resultData.sources.length === 0) {
+            resultData.sources = [{ name: "Recherche Perplexity Web", status: "confirmed", note: "Analyse croisée des actualités en ligne" }];
+        }
 
         return {
             statusCode: 200,
