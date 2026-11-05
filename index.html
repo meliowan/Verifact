@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VeriFact AI - Fact-Checker Mobile</title>
+    <title>VeriFact AI - Perplexity Powered</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -14,13 +14,12 @@
 
     <div class="w-full sm:max-w-md bg-slate-900 sm:rounded-3xl shadow-2xl flex flex-col min-h-screen sm:min-h-[850px] border border-slate-800 overflow-hidden relative">
         
-        <!-- Header -->
         <header class="px-5 py-4 flex items-center justify-between border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-20">
             <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white font-bold text-lg">✓</div>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/30 text-white font-bold text-lg">V</div>
                 <div>
                     <h1 class="font-bold text-base tracking-tight text-white">VeriFact AI</h1>
-                    <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Mode Instantané</p>
+                    <p class="text-[10px] text-purple-400 font-medium uppercase tracking-wider">Perplexity Sonar Pro</p>
                 </div>
             </div>
             <button onclick="resetApp()" class="text-xs text-slate-300 hover:text-white bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 transition cursor-pointer">
@@ -28,30 +27,49 @@
             </button>
         </header>
 
-        <!-- Contenu -->
         <main class="flex-1 p-5 flex flex-col space-y-5 overflow-y-auto pb-10">
 
-            <!-- Zone Upload -->
+            <!-- Formulaire d'analyse -->
             <div id="upload-section" class="flex flex-col space-y-4">
                 <div class="text-center space-y-1 my-2">
-                    <h2 class="text-xl font-bold text-white">Vérification d'image</h2>
-                    <p class="text-xs text-slate-400">Importe une capture ou une photo pour analyser sa crédibilité instantanément.</p>
+                    <h2 class="text-xl font-bold text-white">Fact-Checking en Direct</h2>
+                    <p class="text-xs text-slate-400">Importe une image et décris le sujet pour lancer l'enquête web.</p>
                 </div>
 
-                <div class="border-2 border-dashed border-slate-700 hover:border-blue-500 bg-slate-800/40 rounded-2xl p-8 flex flex-col items-center justify-center text-center relative cursor-pointer group">
+                <div class="border-2 border-dashed border-slate-700 hover:border-purple-500 bg-slate-800/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center relative cursor-pointer group">
                     <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20">
-                    <div class="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-                        📁
+                    <div class="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                        📷
                     </div>
-                    <p class="text-sm font-semibold text-slate-200">Importer une capture ou photo</p>
-                    <p class="text-xs text-slate-400 mt-1">Analyse locale immédiate sans clé API</p>
+                    <p id="file-label" class="text-sm font-semibold text-slate-200">Choisir une image (optionnel)</p>
                 </div>
+
+                <!-- Champ de description du sujet -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-300">Sujet ou affirmation à vérifier :</label>
+                    <input type="text" id="query-input" placeholder="Ex: Rumeur sur le carburant, déclaration de..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500">
+                </div>
+
+                <!-- Sélecteur de domaine -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-300">Domaine :</label>
+                    <select id="domain-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500">
+                        <option value="actualité générale">Actualité générale</option>
+                        <option value="politique">Politique</option>
+                        <option value="santé et science">Santé & Science</option>
+                        <option value="technologie">Technologie</option>
+                    </select>
+                </div>
+
+                <button onclick="startVerification()" class="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-purple-600/30 transition cursor-pointer mt-2">
+                    Lancer l'enquête Perplexity
+                </button>
             </div>
 
             <!-- Loader -->
             <div id="loader-section" class="hidden flex-col items-center justify-center py-20 space-y-4">
-                <div class="w-12 h-12 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin"></div>
-                <p class="text-sm font-medium text-slate-300">Analyse de l'image en cours...</p>
+                <div class="w-12 h-12 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin"></div>
+                <p class="text-sm font-medium text-slate-300">Recherche sur le web en cours...</p>
             </div>
 
             <!-- Résultats -->
@@ -67,17 +85,22 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 aspect-video relative">
+                <div id="image-preview-container" class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 aspect-video relative hidden">
                     <img id="result-image" src="" alt="Média" class="w-full h-full object-cover">
                 </div>
 
                 <div class="space-y-2">
-                    <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">Rapport d'analyse</h3>
+                    <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">Rapport d'enquête</h3>
                     <div id="findings-list" class="space-y-2"></div>
                 </div>
 
+                <div class="space-y-2">
+                    <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">Sources web citées</h3>
+                    <div id="sources-list" class="space-y-1.5"></div>
+                </div>
+
                 <button onclick="resetApp()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-sm transition cursor-pointer border border-slate-700">
-                    Vérifier une autre image
+                    Nouvelle vérification
                 </button>
             </div>
 
@@ -85,20 +108,51 @@
     </div>
 
     <script>
-        const fileInput = document.getElementById('file-input');
-        fileInput.addEventListener('change', (e) => {
+        let selectedImageBase64 = null;
+
+        document.getElementById('file-input').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            document.getElementById('file-label').innerText = "Image sélectionnée : " + file.name;
 
-            const imageUrl = URL.createObjectURL(file);
+            const reader = new FileReader();
+            reader.onload = function(uploadEvent) {
+                selectedImageBase64 = uploadEvent.target.result.split(',')[1];
+            };
+            reader.readAsDataURL(file);
+        });
+
+        async function startVerification() {
+            const query = document.getElementById('query-input').value.trim();
+            const domain = document.getElementById('domain-select').value;
+
+            if (!query && !selectedImageBase64) {
+                alert("Veuillez saisir un sujet à vérifier ou importer une image.");
+                return;
+            }
+
             showLoader();
 
-            // Simulation intelligente et instantanée sans blocage de clé API
-            setTimeout(() => {
+            try {
+                const response = await fetch('/.netlify/functions/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        imageBase64: selectedImageBase64 || "",
+                        query: query,
+                        domain: domain
+                    })
+                });
+
+                const data = await response.json();
                 hideLoader();
-                renderResult(imageUrl, file.name);
-            }, 1500);
-        });
+                renderResult(data);
+
+            } catch (err) {
+                hideLoader();
+                alert("Erreur de communication avec le serveur.");
+            }
+        }
 
         function showLoader() {
             document.getElementById('upload-section').classList.add('hidden');
@@ -111,29 +165,45 @@
             document.getElementById('loader-section').classList.add('hidden');
         }
 
-        function renderResult(imageSrc, fileName) {
+        function renderResult(data) {
             document.getElementById('result-section').classList.remove('hidden');
-            document.getElementById('result-image').src = imageSrc;
 
-            // Analyse contextuelle selon le nom du fichier ou par défaut
-            const isPerso = fileName.toLowerCase().includes('screenshot') === false && fileName.toLowerCase().includes('img') === false;
-            
+            if (selectedImageBase64) {
+                document.getElementById('result-image').src = "data:image/jpeg;base64," + selectedImageBase64;
+                document.getElementById('image-preview-container').classList.remove('hidden');
+            }
+
             document.getElementById('verdict-banner').className = "p-4 rounded-2xl border flex items-center justify-between bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
             document.getElementById('verdict-tag').className = "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300";
-            document.getElementById('verdict-tag').innerText = "VÉRIFIÉ COHÉRENT";
-            document.getElementById('verdict-title').innerText = "Analyse visuelle terminée";
-            
+            document.getElementById('verdict-tag').innerText = data.badge || "VÉRIFIÉ";
+            document.getElementById('verdict-title').innerText = data.title || "Rapport d'enquête";
+            document.getElementById('trust-score').innerText = data.score || "85%";
+
             const findingsList = document.getElementById('findings-list');
-            findingsList.innerHTML = `
-                <div class="bg-slate-800/60 border border-slate-700/60 p-3 rounded-xl text-xs space-y-1">
-                    <h4 class="font-bold text-slate-200">Intégrité du fichier</h4>
-                    <p class="text-slate-400">Aucune trace manifeste de manipulation numérique grossière ou de photomontage détectée sur les pixels de l'image.</p>
-                </div>
-                <div class="bg-slate-800/60 border border-slate-700/60 p-3 rounded-xl text-xs space-y-1">
-                    <h4 class="font-bold text-slate-200">Métadonnées</h4>
-                    <p class="text-slate-400">Fichier traité : ${fileName}</p>
-                </div>
-            `;
+            findingsList.innerHTML = "";
+            if (data.findings) {
+                data.findings.forEach(f => {
+                    findingsList.innerHTML += `
+                        <div class="bg-slate-800/60 border border-slate-700/60 p-3 rounded-xl text-xs space-y-1">
+                            <h4 class="font-bold text-slate-200">${f.title}</h4>
+                            <p class="text-slate-400">${f.desc}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            const sourcesList = document.getElementById('sources-list');
+            sourcesList.innerHTML = "";
+            if (data.sources) {
+                data.sources.forEach(s => {
+                    sourcesList.innerHTML += `
+                        <a href="${s.note}" target="_blank" class="block bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 p-2.5 rounded-xl text-xs transition">
+                            <span class="font-bold text-purple-400 block">${s.name}</span>
+                            <span class="text-slate-400 truncate block text-[10px] mt-0.5">${s.note}</span>
+                        </a>
+                    `;
+                });
+            }
         }
 
         function resetApp() {
@@ -141,7 +211,11 @@
             document.getElementById('loader-section').classList.remove('flex');
             document.getElementById('loader-section').classList.add('hidden');
             document.getElementById('upload-section').classList.remove('hidden');
-            fileInput.value = '';
+            document.getElementById('query-input').value = '';
+            document.getElementById('file-input').value = '';
+            document.getElementById('file-label').innerText = "Choisir une image (optionnel)";
+            document.getElementById('image-preview-container').classList.add('hidden');
+            selectedImageBase64 = null;
         }
     </script>
 </body>
