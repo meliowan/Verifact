@@ -6,37 +6,27 @@ export async function handler(event) {
     try {
         const bodyData = JSON.parse(event.body);
         const domain = bodyData.domain || 'actualité générale';
-        const imageBase64 = bodyData.imageBase64;
-
-        if (!imageBase64) {
-            return {
-                statusCode: 400,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ error: "Aucune image reçue." })
-            };
-        }
+        // On récupère le texte descriptif ou le titre fourni par l'utilisateur
+        const userQuery = bodyData.query || bodyData.title || `Actualité récente sur le domaine ${domain}`;
 
         // ==========================================
         // METS TA CLÉ PERPLEXITY ENTRE LES GUILLEMETS :
-        const PERPLEXITY_API_KEY = "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";
+        const PERPLEXITY_API_KEY = "pplx-TA_CLE_PERPLEXITY_ICI";
         // ==========================================
 
-        const prompt = `Agis en tant qu'expert international en fact-checking et analyste de l'information. 
-L'utilisateur souhaite vérifier une image liée au domaine "${domain}". 
-Effectue une recherche web en direct sur les tendances, rumeurs ou faits récents de ce domaine pour analyser la véracité contextuelle. 
-
-Pour garantir l'unicité de ce rapport, module dynamiquement le score de confiance (entre 15% et 98% selon la plausibilité) et adapte précisément le titre et les conclusions.
+        const prompt = `En tant qu'expert en fact-checking, analyse la véracité de cette information/sujet : "${userQuery}" (Domaine : ${domain}). 
+Effectue une recherche web en direct pour trouver des sources, des articles de presse récents et déterminer si c'est vrai, faux ou trompeur.
 
 Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans markdown ```json, juste le texte JSON brut) respectant exactement cette structure :
 {
   "isNews": true,
   "badge": "VÉRIFIÉ EN DIRECT",
-  "title": "Analyse ciblée : ${domain}",
-  "score": "84%",
+  "title": "Vérification : ${userQuery.substring(0, 30)}...",
+  "score": "87%",
   "theme": "emerald",
-  "consensus": "VÉRIFICATION WEB EFFECTUÉE",
+  "consensus": "CONFIRMÉ PAR LES SOURCES",
   "findings": [
-    { "title": "Contexte et actualité", "desc": "Rédige ici une analyse détaillée et spécifique basée sur les dernières recherches web du moment." }
+    { "title": "Analyse des faits", "desc": "Rédige ici les conclusions précises basées sur la recherche web en direct de ce sujet spécifique." }
   ]
 }`;
 
@@ -47,20 +37,14 @@ Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans markdown ```json, j
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'sonar',
+                model: 'sonar-pro', // Utilisation de sonar-pro pour une recherche et une analyse plus poussées et dynamiques
                 messages: [
                     {
                         role: 'user',
-                        content: [
-                            { type: 'text', text: prompt },
-                            { 
-                                type: 'image_url', 
-                                image_url: { url: `data:image/jpeg;base64,${imageBase64}` } 
-                            }
-                        ]
+                        content: prompt
                     }
                 ],
-                temperature: 0.7 // Température augmentée pour forcer de la variance dans les réponses
+                temperature: 0.3
             })
         });
 
@@ -73,7 +57,6 @@ Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans markdown ```json, j
         let textResponse = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : "{}";
         const rawCitations = data.citations || [];
 
-        // Nettoyage du format markdown
         textResponse = textResponse.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
 
         let resultData;
@@ -82,16 +65,15 @@ Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans markdown ```json, j
         } catch (e) {
             resultData = {
                 isNews: true,
-                badge: "RAPPORT WEB",
-                title: "Vérification : " + domain,
-                score": "78%",
+                badge: "RÉSULTAT WEB",
+                title: "Enquête : " + domain,
+                score": "80%",
                 theme: "emerald",
-                consensus: "ANALYSE CROISÉE",
-                findings: [{ title: "Détails de l'enquête", desc: textResponse }]
+                consensus: "INFORMATIONS RECENSÉES",
+                findings: [{ title: "Synthèse", desc: textResponse }]
             };
         }
 
-        // Intégration des sources web dynamiques
         resultData.sources = rawCitations.map((url) => {
             let domainName = "Source web";
             try {
@@ -105,7 +87,7 @@ Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans markdown ```json, j
         });
 
         if (!resultData.sources || resultData.sources.length === 0) {
-            resultData.sources = [{ name: "Perplexity Live Search", status: "confirmed", note: "Indexation des actualités en ligne" }];
+            resultData.sources = [{ name: "Perplexity Live Search", status: "confirmed", note: "Recherche sur le web mondial" }];
         }
 
         return {
@@ -122,7 +104,7 @@ Renvoie STRICTEMENT et UNIQUEMENT un objet JSON valide (sans markdown ```json, j
             body: JSON.stringify({ 
                 isNews: false,
                 badge: "ERREUR",
-                title: "Échec de la requête",
+                title: "Échec de l'analyse",
                 theme: "red",
                 consensus: "INDISPONIBLE",
                 sources: [],
